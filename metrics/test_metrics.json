@@ -1,0 +1,15 @@
+{
+  "test_roc_auc": 0.959763,
+  "test_auc_pr": 0.813371,
+  "test_f1_fraud": 0.525424,
+  "confusion_matrix": [
+    [
+      42505,
+      100
+    ],
+    [
+      12,
+      62
+    ]
+  ]
+}

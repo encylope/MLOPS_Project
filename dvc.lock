@@ -1,0 +1,138 @@
+schema: '2.0'
+stages:
+  validate:
+    cmd: python scripts/validate_data.py
+    deps:
+    - path: data/raw/creditcard.csv
+      hash: md5
+      md5: e90efcb83d69faf99fcab8b0255024de
+      size: 150828752
+    - path: scripts/validate_data.py
+      hash: md5
+      md5: 50d5c4a29ac7999a62c6a36fcfecf0c0
+      size: 1041
+    outs:
+    - path: data/processed/validation_report.json
+      hash: md5
+      md5: cd3bf27ab9e3ee508985cd9eeecaf39c
+      size: 960
+  preprocess:
+    cmd: python scripts/preprocess.py
+    deps:
+    - path: data/processed/validation_report.json
+      hash: md5
+      md5: cd3bf27ab9e3ee508985cd9eeecaf39c
+      size: 960
+    - path: data/raw/creditcard.csv
+      hash: md5
+      md5: e90efcb83d69faf99fcab8b0255024de
+      size: 150828752
+    - path: scripts/preprocess.py
+      hash: md5
+      md5: 34d060735dd2a9670c43b5c881328081
+      size: 971
+    outs:
+    - path: data/processed/creditcard_processed.csv
+      hash: md5
+      md5: ae268517b7afb6e9995f62e3baeda72a
+      size: 158278850
+    - path: data/processed/scaler_params.json
+      hash: md5
+      md5: 0a5cb43543191ad73bb5243e44d01235
+      size: 135
+  feature_engineering:
+    cmd: python scripts/feature_engineering.py
+    deps:
+    - path: data/processed/creditcard_processed.csv
+      hash: md5
+      md5: ae268517b7afb6e9995f62e3baeda72a
+      size: 158278850
+    - path: scripts/feature_engineering.py
+      hash: md5
+      md5: 98a31a3c475f789edb12d9ed516bb5c6
+      size: 1048
+    outs:
+    - path: data/features/feature_baseline.json
+      hash: md5
+      md5: baecab3dda3a5b36e8b75f97ed00fd03
+      size: 6322
+    - path: data/features/features.csv
+      hash: md5
+      md5: f41382804a7cc4aa4ef8af36ae64f161
+      size: 158065044
+  split:
+    cmd: python scripts/split_data.py
+    deps:
+    - path: data/features/features.csv
+      hash: md5
+      md5: f41382804a7cc4aa4ef8af36ae64f161
+      size: 158065044
+    - path: scripts/split_data.py
+      hash: md5
+      md5: 606a1911d7ad26b9d137c00a0d64cdad
+      size: 1006
+    params:
+      params.yaml:
+        split.random_state: 42
+        split.test_size: 0.15
+        split.val_size: 0.15
+    outs:
+    - path: data/features/test.csv
+      hash: md5
+      md5: eff00fab9e7926a416fc58c96a65ada6
+      size: 23710927
+    - path: data/features/train.csv
+      hash: md5
+      md5: 1369716538488a7aaf5ad3a7d0da2436
+      size: 110645047
+    - path: data/features/val.csv
+      hash: md5
+      md5: cb1a354e7786d331d209947152955ae9
+      size: 23708587
+  train:
+    cmd: python scripts/train.py --model-type xgboost
+    deps:
+    - path: data/features/train.csv
+      hash: md5
+      md5: 1369716538488a7aaf5ad3a7d0da2436
+      size: 110645047
+    - path: data/features/val.csv
+      hash: md5
+      md5: cb1a354e7786d331d209947152955ae9
+      size: 23708587
+    - path: scripts/train.py
+      hash: md5
+      md5: 888cb2bc06469a3636b61409a82b4f69
+      size: 10659
+    params:
+      params.yaml:
+        model.learning_rate: 0.05
+        model.max_depth: 6
+        model.n_estimators: 200
+        model.type: xgboost
+        smote.sampling_strategy: 0.1
+    outs:
+    - path: metrics/train_metrics.json
+      hash: md5
+      md5: fd21395fabd2cff922c3e4936aee19cd
+      size: 191
+  evaluate:
+    cmd: python scripts/evaluate.py
+    deps:
+    - path: data/features/test.csv
+      hash: md5
+      md5: eff00fab9e7926a416fc58c96a65ada6
+      size: 23710927
+    - path: scripts/evaluate.py
+      hash: md5
+      md5: 2f9a47d78345d749c6fbd34d90f1c69f
+      size: 1924
+    outs:
+    - path: metrics/roc_curve.csv
+      hash: md5
+      md5: eee20cbc12cc7d80e82d95aa93672f74
+      size: 77536
+    - path: metrics/test_metrics.json
+      hash: md5
+      md5: d74703a6c9b51c721b12b54ecd748dad
+      size: 196

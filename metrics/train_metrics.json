@@ -1,0 +1,8 @@
+{
+  "test_roc_auc": 0.959763,
+  "test_auc_pr": 0.813371,
+  "test_f1_fraud": 0.794702,
+  "test_precision_fraud": 0.779221,
+  "test_recall_fraud": 0.810811,
+  "test_accuracy": 0.999274
+}

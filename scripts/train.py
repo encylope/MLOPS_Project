@@ -135,6 +135,7 @@ def train_and_log(model_type: str = "xgboost"):
         smote = SMOTE(sampling_strategy=smote_ratio, random_state=42)
         X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
         logger.info(f"After SMOTE: {X_resampled.shape[0]} rows | fraud={y_resampled.sum()}")
+
         mlflow.log_metric("train_rows_after_smote", len(X_resampled))
 
         # ── Model selection + hyperparams ──────────────────────────────────────
@@ -249,8 +250,13 @@ def train_and_log(model_type: str = "xgboost"):
             registered_model_name="fraud-detector",
             input_example=X_test.iloc[:1],
         )
+        # Save metrics locally for DVC tracking
+        os.makedirs("metrics", exist_ok=True)
+        with open("metrics/train_metrics.json", "w") as f:
+            json.dump(metrics, f, indent=2)
 
         logger.info(f"Training complete. Run ID: {run.info.run_id}")
+
         return run.info.run_id
 
 
