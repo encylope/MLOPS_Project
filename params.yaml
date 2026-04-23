@@ -1,0 +1,22 @@
+split:
+  test_size: 0.15
+  val_size: 0.15
+  random_state: 42
+
+model:
+  type: xgboost
+  n_estimators: 200
+  max_depth: 6
+  learning_rate: 0.05
+  scale_pos_weight: 10
+
+smote:
+  sampling_strategy: 0.1
+  random_state: 42
+
+threshold:
+  decision: 0.5  # updated after val-set tuning
+
+monitoring:
+  drift_threshold: 0.05  # PSI threshold for data drift alert
+  error_rate_threshold: 0.05

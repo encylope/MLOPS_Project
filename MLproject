@@ -1,0 +1,24 @@
+name: fraud-detection-mlops
+
+python_env: python_env.yaml
+
+entry_points:
+  train:
+    parameters:
+      model_type: {type: string, default: "xgboost"}
+      mlflow_tracking_uri: {type: string, default: "http://localhost:5000"}
+    command: >
+      python scripts/train.py
+        --model-type {model_type}
+
+  evaluate:
+    parameters:
+      run_id: {type: string}
+    command: >
+      python scripts/evaluate.py --run-id {run_id}
+
+  ingest:
+    command: python scripts/preprocess.py
+
+  full_pipeline:
+    command: dvc repro

@@ -1,0 +1,85 @@
+stages:
+  # ── Stage 1: Data validation ───────────────────────────────────────────────
+  validate:
+    cmd: python scripts/validate_data.py
+    deps:
+      - data/raw/creditcard.csv
+      - scripts/validate_data.py
+    outs:
+      - data/processed/validation_report.json
+
+  # ── Stage 2: Preprocessing ────────────────────────────────────────────────
+  preprocess:
+    cmd: python scripts/preprocess.py
+    deps:
+      - data/raw/creditcard.csv
+      - data/processed/validation_report.json
+      - scripts/preprocess.py
+    outs:
+      - data/processed/creditcard_processed.csv
+      - data/processed/scaler_params.json
+
+  # ── Stage 3: Feature engineering ──────────────────────────────────────────
+  feature_engineering:
+    cmd: python scripts/feature_engineering.py
+    deps:
+      - data/processed/creditcard_processed.csv
+      - scripts/feature_engineering.py
+    outs:
+      - data/features/features.csv
+      - data/features/feature_baseline.json
+
+  # ── Stage 4: Train/val/test split ─────────────────────────────────────────
+  split:
+    cmd: python scripts/split_data.py
+    deps:
+      - data/features/features.csv
+      - scripts/split_data.py
+    params:
+      - params.yaml:
+          - split.test_size
+          - split.val_size
+          - split.random_state
+    outs:
+      - data/features/train.csv
+      - data/features/val.csv
+      - data/features/test.csv
+
+  # ── Stage 5: Model training ────────────────────────────────────────────────
+  train:
+    cmd: python scripts/train.py --model-type ${model.type}
+    deps:
+      - data/features/train.csv
+      - data/features/val.csv
+      - scripts/train.py
+    params:
+      - params.yaml:
+          - model.type
+          - model.n_estimators
+          - model.max_depth
+          - model.learning_rate
+          - smote.sampling_strategy
+    metrics:
+      - metrics/train_metrics.json:
+          cache: false
+
+  # ── Stage 6: Model evaluation ─────────────────────────────────────────────
+  evaluate:
+    cmd: python scripts/evaluate.py
+    deps:
+      - data/features/test.csv
+      - scripts/evaluate.py
+    metrics:
+      - metrics/test_metrics.json:
+          cache: false
+    plots:
+      - metrics/roc_curve.csv:
+          x: fpr
+          y: tpr
+          cache: false
+
+artifacts:
+  fraud-model:
+    path: mlflow/artifacts
+    type: model
+    desc: "XGBoost fraud detection model tracked via MLflow"
