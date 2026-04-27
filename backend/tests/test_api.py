@@ -7,20 +7,22 @@ Test plan:
   TC-002: Ready endpoint returns 503 when model not loaded
   TC-003: Prediction schema validation — valid input accepted
   TC-004: Prediction schema validation — negative amount rejected
-  TC-005: Risk level computation — low probability → LOW
-  TC-006: Risk level computation — high probability → HIGH
+  TC-005: Risk level computation — low probability -> LOW
+  TC-006: Risk level computation — high probability -> HIGH
   TC-007: Batch endpoint rejects empty list
   TC-008: Batch endpoint rejects lists > 100
+  TC-009: PredictionResponse schema valid
 """
 
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, PropertyMock
 
 # Patch MLflow before importing app to avoid real connection
 with patch("mlflow.set_tracking_uri"), patch("app.services.model_service.ModelService.load_model"):
     from app.main import app
     from app.models.schemas import TransactionRequest, PredictionResponse
+    from app.services.model_service import model_service
 
 client = TestClient(app)
 
@@ -51,7 +53,11 @@ def test_health_endpoint_returns_200():
 # TC-002
 def test_ready_endpoint_returns_503_when_model_not_loaded():
     """Readiness check fails when model is not loaded."""
-    with patch("app.services.model_service.model_service.is_loaded", False):
+    with patch.object(
+        type(model_service),
+        'is_loaded',
+        new_callable=lambda: property(lambda self: False)
+    ):
         response = client.get("/ready")
         assert response.status_code == 503
         assert response.json()["status"] == "not_ready"
@@ -95,7 +101,7 @@ def test_risk_level_high():
 def test_batch_rejects_empty_list():
     """Batch endpoint should reject empty transaction list."""
     response = client.post("/api/v1/predict/batch", json={"transactions": []})
-    assert response.status_code == 422  # Pydantic validation error
+    assert response.status_code == 422
 
 
 # TC-008
@@ -106,7 +112,7 @@ def test_batch_rejects_oversized_list():
     assert response.status_code == 422
 
 
-# TC-009: Prediction response schema
+# TC-009
 def test_prediction_response_schema():
     """PredictionResponse should accept valid risk levels."""
     resp = PredictionResponse(
