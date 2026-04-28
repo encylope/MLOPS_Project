@@ -275,13 +275,3 @@ GitHub Actions runs 4 jobs on every push to `main`:
 
 ---
 
-## Documentation
-
-All documentation is in the `docs/` folder:
-
-| Document | Description |
-|----------|-------------|
-| HLD.md | High-level design, architecture, design principles |
-| LLD.md | API endpoint specifications with I/O schemas |
-| TEST_PLAN.md | Test cases, acceptance criteria, test report template |
-| USER_MANUAL.md | Non-technical user guide for the web portal |
